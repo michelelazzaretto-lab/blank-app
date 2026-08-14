@@ -1,6 +1,646 @@
+import os
+import smtplib
+from datetime import datetime, timedelta
+from email.message import EmailMessage
+
+    
 import streamlit as st
 
-st.title("🎈 My new app")
-st.write(
-    "Let's start building! For help and inspiration, head over to [docs.streamlit.io](https://docs.streamlit.io/)."
-)
+
+LOGO_URL = "https://myholiday.krossbooking.com/images/21/logo-sidebar-desktop.png?cdn=0"
+
+PREDEFINED_RECIPIENT = "michele.lazzaretto@gmail.com"
+
+PERIOD_PRIORITY = {
+    "promozionale": 0,
+    "stagione": 1,
+    "alta stagione": 2,
+}
+
+PERIOD_PRICE_TIERS = {
+    "alta stagione": {
+        1: {"adult": 74.50, "junior": 37.00, "youth": 63.00, "senior": 63.00},
+        2: {"adult": 143.50, "junior": 71.50, "youth": 121.50, "senior": 121.50},
+        3: {"adult": 212.00, "junior": 106.00, "youth": 180.50, "senior": 180.50},
+        4: {"adult": 278.50, "junior": 139.00, "youth": 236.50, "senior": 236.50},
+        5: {"adult": 343.00, "junior": 171.50, "youth": 292.00, "senior": 292.00},
+        6: {"adult": 374.50, "junior": 187.00, "youth": 318.50, "senior": 318.50},
+        7: {"adult": 406.50, "junior": 203.00, "youth": 345.50, "senior": 345.50},
+        8: {"adult": 437.00, "junior": 218.50, "youth": 371.50, "senior": 371.50},
+        9: {"adult": 465.50, "junior": 232.50, "youth": 396.00, "senior": 396.00},
+        10: {"adult": 493.00, "junior": 246.50, "youth": 419.00, "senior": 419.00},
+        11: {"adult": 521.00, "junior": 260.50, "youth": 443.00, "senior": 443.00},
+        12: {"adult": 549.00, "junior": 274.50, "youth": 466.50, "senior": 466.50},
+        13: {"adult": 577.00, "junior": 288.50, "youth": 490.50, "senior": 490.50},
+        14: {"adult": 602.00, "junior": 301.00, "youth": 512.00, "senior": 512.00},
+    },
+    "stagione": {
+        1: {"adult": 66.00, "junior": 33.00, "youth": 56.50, "senior": 56.50},
+        2: {"adult": 127.00, "junior": 63.50, "youth": 108.00, "senior": 108.00},
+        3: {"adult": 188.00, "junior": 94.00, "youth": 160.00, "senior": 160.00},
+        4: {"adult": 246.00, "junior": 123.00, "youth": 209.00, "senior": 209.00},
+        5: {"adult": 303.50, "junior": 151.50, "youth": 258.00, "senior": 258.00},
+        6: {"adult": 331.00, "junior": 165.50, "youth": 281.00, "senior": 281.00},
+        7: {"adult": 358.50, "junior": 179.00, "youth": 304.50, "senior": 304.50},
+        8: {"adult": 387.00, "junior": 193.50, "youth": 329.00, "senior": 329.00},
+        9: {"adult": 411.00, "junior": 205.50, "youth": 349.50, "senior": 349.50},
+        10: {"adult": 435.50, "junior": 217.00, "youth": 370.00, "senior": 370.00},
+        11: {"adult": 460.50, "junior": 230.00, "youth": 391.50, "senior": 391.50},
+        12: {"adult": 484.00, "junior": 242.00, "youth": 411.00, "senior": 411.00},
+        13: {"adult": 508.00, "junior": 254.00, "youth": 432.00, "senior": 432.00},
+        14: {"adult": 531.00, "junior": 265.50, "youth": 451.00, "senior": 451.00},
+    },
+    "promozionale": {
+        1: {"adult": 51.50, "junior": 25.50, "youth": 44.00, "senior": 44.00},
+        2: {"adult": 99.00, "junior": 49.50, "youth": 84.00, "senior": 84.00},
+        3: {"adult": 147.00, "junior": 73.50, "youth": 124.50, "senior": 124.50},
+        4: {"adult": 192.00, "junior": 96.50, "youth": 163.50, "senior": 163.50},
+        5: {"adult": 237.00, "junior": 118.50, "youth": 201.50, "senior": 201.50},
+        6: {"adult": 258.50, "junior": 129.50, "youth": 220.00, "senior": 220.00},
+        7: {"adult": 279.50, "junior": 140.00, "youth": 238.00, "senior": 238.00},
+        8: {"adult": 302.00, "junior": 151.00, "youth": 256.50, "senior": 256.50},
+        9: {"adult": 321.00, "junior": 160.50, "youth": 273.00, "senior": 273.00},
+        10: {"adult": 340.00, "junior": 170.00, "youth": 289.00, "senior": 289.00},
+        11: {"adult": 359.00, "junior": 179.50, "youth": 305.00, "senior": 305.00},
+        12: {"adult": 377.50, "junior": 189.00, "youth": 321.00, "senior": 321.00},
+        13: {"adult": 396.50, "junior": 198.00, "youth": 337.50, "senior": 337.50},
+        14: {"adult": 414.00, "junior": 207.00, "youth": 351.50, "senior": 351.50},
+    },
+}
+
+PERIODS = {
+    "alta stagione": [
+        ("2026-12-26", "2027-01-08"),
+        ("2027-01-30", "2027-03-29"),
+    ],
+    "stagione": [
+        ("2026-12-19", "2026-12-25"),
+        ("2027-01-09", "2027-01-29"),
+        ("2027-03-30", "2027-04-09"),
+    ],
+    "promozionale": [
+        ("2026-11-28", "2026-12-18"),
+        ("2027-04-10", "2027-05-02"),
+    ],
+}
+
+
+def in_periods(date_to_check, periods):
+    for start_str, end_str in periods:
+        start = datetime.fromisoformat(start_str).date()
+        end = datetime.fromisoformat(end_str).date()
+        if start <= date_to_check <= end:
+            return True
+    return False
+
+
+PERIOD_DAILY_PRICES = {
+    "alta stagione": {"adult": 74.50, "junior": 37.00, "youth": 63.00, "senior": 63.00, "baby": 0.0},
+    "stagione": {"adult": 66.00, "junior": 33.00, "youth": 56.50, "senior": 56.50, "baby": 0.0},
+    "promozionale": {"adult": 51.50, "junior": 25.50, "youth": 44.00, "senior": 44.00, "baby": 0.0},
+}
+
+
+def get_skipass_period_for_date(current_date):
+    for period_name, period_ranges in PERIODS.items():
+        if in_periods(current_date, period_ranges):
+            return period_name
+    return None
+
+
+def get_period_info_for_date(current_date):
+    for period_name, period_ranges in PERIODS.items():
+        for start_str, end_str in period_ranges:
+            start = datetime.fromisoformat(start_str).date()
+            end = datetime.fromisoformat(end_str).date()
+            if start <= current_date <= end:
+                return period_name, start, end
+    return None
+
+
+def get_num_giorni_bounds(start_date):
+    contiguous_end = get_contiguous_end_date(start_date)
+    if contiguous_end is None:
+        return 5, 5, 5
+
+    allowed_days = min(14, (contiguous_end - start_date).days + 1)
+
+    min_days = 5
+    max_days = max(min_days, allowed_days)
+    default_days = min(5, max_days)
+    return min_days, max_days, default_days
+
+
+def get_contiguous_end_date(start_date):
+    valid_ranges = sorted(
+        (
+            datetime.fromisoformat(start_str).date(),
+            datetime.fromisoformat(end_str).date(),
+        )
+        for period_ranges in PERIODS.values()
+        for start_str, end_str in period_ranges
+    )
+
+    for start, end in valid_ranges:
+        if start <= start_date <= end:
+            return end
+    return None
+
+
+def choose_skipass_period(start_date, num_days):
+    counts = {period_name: 0 for period_name in PERIODS}
+    for offset in range(num_days):
+        current_date = start_date + timedelta(days=offset)
+        period_name = get_skipass_period_for_date(current_date)
+        if period_name is None:
+            continue
+        counts[period_name] += 1
+
+    best_period = None
+    best_key = None
+    for period_name, count in counts.items():
+        if count == 0:
+            continue
+        season_price = PERIOD_PRICE_TIERS[period_name][num_days]["adult"]
+        period_key = (count, season_price)
+        if best_key is None or period_key > best_key:
+            best_key = period_key
+            best_period = period_name
+
+    return best_period
+
+
+def calculate_total_price(start_date, num_days, num_adulti, num_ridotti, num_young, num_senior, num_baby):
+    daily_details = []
+    category_totals = {
+        "adult": 0.0,
+        "junior": 0.0,
+        "youth": 0.0,
+        "senior": 0.0,
+        "baby": 0.0,
+    }
+    segment_summary = []
+    total_skiers = num_adulti + num_ridotti + num_young + num_senior + num_baby
+    deposit_total = total_skiers * 5.0
+
+    reservation_period = choose_skipass_period(start_date, num_days)
+
+    for offset in range(num_days):
+        current_date = start_date + timedelta(days=offset)
+        period_name = get_skipass_period_for_date(current_date)
+        if period_name is None:
+            raise ValueError("La data selezionata esce dai periodi di apertura skipass.")
+
+        prices = PERIOD_DAILY_PRICES[period_name]
+        daily_details.append(
+            {
+                "data": current_date.isoformat(),
+                "stagione": period_name,
+                "adulto": prices["adult"],
+                "junior": prices["junior"],
+                "youth": prices["youth"],
+                "senior": prices["senior"],
+                "baby": prices.get("baby", 0.0),
+                "totale_giornaliero": (
+                    num_adulti * prices["adult"]
+                    + num_ridotti * prices["junior"]
+                    + num_young * prices["youth"]
+                    + num_senior * prices["senior"]
+                    + num_baby * prices.get("baby", 0.0)
+                ),
+            }
+        )
+
+    segment_prices = PERIOD_PRICE_TIERS[reservation_period][num_days]
+    segment_total = (
+        num_adulti * segment_prices["adult"]
+        + num_ridotti * segment_prices["junior"]
+        + num_young * segment_prices["youth"]
+        + num_senior * segment_prices["senior"]
+        + num_baby * segment_prices.get("baby", 0.0)
+    )
+    segment_summary.append(
+        {
+            "periodo": reservation_period,
+            "durata": f"{num_days} giorni",
+            "adulto": f"€ {segment_prices['adult']:.2f}",
+            "junior": f"€ {segment_prices['junior']:.2f}",
+            "youth": f"€ {segment_prices['youth']:.2f}",
+            "senior": f"€ {segment_prices['senior']:.2f}",
+            "baby": f"€ {segment_prices.get('baby', 0.0):.2f}",
+            "totale_segmento": f"€ {segment_total:.2f}",
+        }
+    )
+    category_totals["adult"] += num_adulti * segment_prices["adult"]
+    category_totals["junior"] += num_ridotti * segment_prices["junior"]
+    category_totals["youth"] += num_young * segment_prices["youth"]
+    category_totals["senior"] += num_senior * segment_prices["senior"]
+    category_totals["baby"] += num_baby * segment_prices.get("baby", 0.0)
+
+    tariff_total = sum(category_totals.values())
+    total = tariff_total + deposit_total
+
+    pricing_summary = [
+        {
+            "Categoria": "adulto",
+            "Numero selezionati": num_adulti,
+            "Totale categoria": f"€ {category_totals['adult']:.2f}",
+            "Prezzo medio/giorno": f"€ {category_totals['adult'] / num_days:.2f}",
+        },
+        {
+            "Categoria": "junior",
+            "Numero selezionati": num_ridotti,
+            "Totale categoria": f"€ {category_totals['junior']:.2f}",
+            "Prezzo medio/giorno": f"€ {category_totals['junior'] / num_days:.2f}",
+        },
+        {
+            "Categoria": "youth",
+            "Numero selezionati": num_young,
+            "Totale categoria": f"€ {category_totals['youth']:.2f}",
+            "Prezzo medio/giorno": f"€ {category_totals['youth'] / num_days:.2f}",
+        },
+        {
+            "Categoria": "senior",
+            "Numero selezionati": num_senior,
+            "Totale categoria": f"€ {category_totals['senior']:.2f}",
+            "Prezzo medio/giorno": f"€ {category_totals['senior'] / num_days:.2f}",
+        },
+        {
+            "Categoria": "baby",
+            "Numero selezionati": num_baby,
+            "Totale categoria": f"€ {category_totals['baby']:.2f}",
+            "Prezzo medio/giorno": f"€ {category_totals['baby'] / num_days:.2f}",
+        },
+        {
+            "Categoria": "cauzione",
+            "Numero selezionati": total_skiers,
+            "Totale categoria": f"€ {deposit_total:.2f}",
+            "Prezzo medio/giorno": f"€ {deposit_total / num_days:.2f}",
+        },
+    ]
+    return total, reservation_period, pricing_summary, daily_details, segment_summary, tariff_total, deposit_total
+
+
+def get_smtp_settings() -> dict[str, str]:
+    return {
+        "server": os.getenv("SMTP_SERVER", ""),
+        "port": os.getenv("SMTP_PORT", ""),
+        "username": os.getenv("SMTP_USERNAME", ""),
+        "password": os.getenv("SMTP_PASSWORD", ""),
+        "from_email": os.getenv("SMTP_FROM_EMAIL", ""),
+    }
+
+
+def send_reservation_email(reservation: dict, total_price: int, customer_email: str) -> tuple[bool, str]:
+    smtp_settings = get_smtp_settings()
+    smtp_server = smtp_settings["server"]
+    smtp_port = smtp_settings["port"]
+    smtp_username = smtp_settings["username"]
+    smtp_password = smtp_settings["password"]
+    smtp_from = smtp_settings["from_email"]
+
+    if not all([smtp_server, smtp_port, smtp_username, smtp_password, smtp_from]):
+        return False, (
+            "Impossibile inviare email: mancanti le variabili d'ambiente SMTP_SERVER, "
+            "SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD e SMTP_FROM_EMAIL."
+        )
+
+    recipients = [PREDEFINED_RECIPIENT, customer_email]
+    subject = "Nuova prenotazione skipass"
+    body_lines = [
+        "Dettaglio prenotazione skipass:",
+        f"Nome: {reservation['nome']}",
+        f"Cognome: {reservation['cognome']}",
+        f"Skipass valido dal: {reservation['data_inizio']}",
+        f"Numero di giorni: {reservation['num_giorni']}",
+        f"Numero adulti: {reservation['num_adulti']}",
+        f"Numero junior (nati dal 2011 al 2018): {reservation['num_ridotti']}",
+        f"Numero youth (nati dal 2002 al 2010): {reservation['num_youth']}",
+        f"Numero senior (nati prima del 2002): {reservation['num_senior']}",
+        f"Numero baby (nati dal 2019 in avanti): {reservation['num_baby']}",
+        f"Indirizzo mail: {customer_email}",
+        f"Totale tariffa: € {total_price - 5 * (reservation['num_adulti'] + reservation['num_ridotti'] + reservation['num_young'] + reservation['num_senior'] + reservation['num_baby']):.2f}",
+        f"Totale cauzione: € {5 * (reservation['num_adulti'] + reservation['num_ridotti'] + reservation['num_young'] + reservation['num_senior'] + reservation['num_baby']):.2f}",
+        f"Totale da pagare: € {total_price:.2f}",
+    ]
+
+    message = EmailMessage()
+    message["From"] = smtp_from
+    message["To"] = ", ".join(recipients)
+    message["Subject"] = subject
+
+    html_body = f"""
+    <html>
+      <body>
+        <img src="{LOGO_URL}" alt="Logo skipass" style="max-width: 280px; height: auto; margin-bottom: 16px;" />
+        <pre style="font-family: Arial, sans-serif; white-space: pre-wrap;">{''.join(f'{line}\n' for line in body_lines)}</pre>
+      </body>
+    </html>
+    """
+    message.set_content("\n".join(body_lines))
+    message.add_alternative(html_body, subtype="html")
+
+    try:
+        port_number = int(smtp_port)
+    except ValueError:
+        return False, "SMTP_PORT deve essere un numero intero valido."
+
+    try:
+        if port_number == 465:
+            server = smtplib.SMTP_SSL(smtp_server, port_number, timeout=20)
+        else:
+            server = smtplib.SMTP(smtp_server, port_number, timeout=20)
+            server.starttls()
+
+        server.login(smtp_username, smtp_password)
+        server.send_message(message)
+        server.quit()
+        return True, "Email inviata correttamente ai destinatari."
+    except Exception as exc:
+        return False, f"Errore durante l'invio dell'email: {exc}"
+
+
+def main() -> None:
+    st.set_page_config(page_title="Reserve your skipass", page_icon="🎿")
+    st.markdown(
+        """
+        <style>
+        .stApp {
+            background: linear-gradient(180deg, #f5f7fb 0%, #eef3fb 100%);
+            color: #0f172a;
+        }
+        div.block-container {
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+            max-width: 1100px;
+        }
+        section[data-testid="stForm"] {
+            background: rgba(255, 255, 255, 0.82);
+            border: 1px solid rgba(26, 55, 101, 0.10);
+            border-radius: 18px;
+            padding: 1.4rem 1.2rem 1rem;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+            color: #0f172a;
+        }
+        .reservation-card {
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid rgba(26, 55, 101, 0.08);
+            border-radius: 16px;
+            padding: 1rem 1.1rem;
+            margin-top: 1rem;
+            box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+            color: #0f172a;
+        }
+        .section-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #4b5d7a;
+            margin: 0.7rem 0 0.5rem;
+        }
+        div[data-testid="stDateInput"],
+        div[data-testid="stNumberInput"] {
+            width: 100% !important;
+        }
+        div[data-testid="stDateInput"] > div,
+        div[data-testid="stNumberInput"] > div {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+        div[data-testid="stDateInput"] label,
+        div[data-testid="stNumberInput"] label {
+            white-space: pre-line !important;
+            display: block !important;
+            line-height: 1.2 !important;
+            text-align: left !important;
+            min-height: 2.6em !important;
+            margin-bottom: 0.35rem !important;
+        }
+        div[data-testid="stButton"] > button {
+            border-radius: 10px;
+            font-weight: 700;
+            padding: 0.7rem 1.25rem;
+            background: linear-gradient(180deg, #1f8fff 0%, #1477d6 100%);
+            color: white;
+            border: none;
+        }
+        div[data-testid="stButton"] > button:hover {
+            filter: brightness(1.03);
+        }
+
+        @media (max-width: 768px) {
+            div.block-container {
+                padding-left: 0.8rem;
+                padding-right: 0.8rem;
+            }
+            section[data-testid="stForm"] {
+                padding: 1rem 0.8rem 0.8rem;
+            }
+            div[data-testid="stHorizontalBlock"] > div {
+                width: 100% !important;
+                max-width: 100% !important;
+                flex: 0 0 100% !important;
+            }
+            div[data-testid="stButton"] > button {
+                width: 100% !important;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .stApp {
+                background: linear-gradient(180deg, #0b1220 0%, #111827 100%);
+                color: #edf3ff;
+            }
+            section[data-testid="stForm"],
+            .reservation-card {
+                background: rgba(15, 23, 42, 0.92);
+                border-color: rgba(148, 163, 184, 0.2);
+                color: #edf3ff;
+                box-shadow: 0 10px 28px rgba(2, 6, 23, 0.45);
+            }
+            .section-label {
+                color: #bfd2ff;
+            }
+            div[data-testid="stButton"] > button {
+                background: linear-gradient(180deg, #2b7fff 0%, #1d5fd6 100%);
+                color: #ffffff;
+            }
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.columns(3)[1].image(LOGO_URL, width=340)
+    st.title("Reserve your skipass")
+    st.write(
+        "Complete the form below and the total will be displayed after calculation. "
+        "_Compila il modulo qui sotto e il totale verrà mostrato dopo il calcolo_."
+    )
+
+    if "reservation" not in st.session_state:
+        st.session_state.reservation = None
+        st.session_state.total_price = None
+        st.session_state.tariff_total = None
+        st.session_state.deposit_total = None
+        st.session_state.selected_period = None
+        st.session_state.pricing_summary = None
+        st.session_state.daily_details = None
+        st.session_state.segment_summary = None
+
+    with st.form("reservation_form"):
+        col_input_1, col_input_2 = st.columns([1.3, 1])
+        with col_input_1:
+            reservation_reference = st.text_input("Full name / reservation number _Nome e cognome / numero di prenotazione_")
+        with col_input_2:
+            email = st.text_input("Email address _Indirizzo email_")
+
+        col_date_1, col_date_2 = st.columns([1.1, 1.1])
+        with col_date_1:
+            st.markdown("<div style='height: 100%;'>", unsafe_allow_html=True)
+            data_inizio = st.date_input("Valid from _Valido dal_")
+            st.session_state.data_inizio = data_inizio
+            st.markdown("</div>", unsafe_allow_html=True)
+        with col_date_2:
+            min_days, max_days, default_days = get_num_giorni_bounds(data_inizio)
+            st.markdown("<div style='height: 100%;'>", unsafe_allow_html=True)
+            num_giorni = st.number_input(
+                "Number of days _Numero di giorni_",
+                min_value=min_days,
+                max_value=max_days,
+                value=default_days,
+            )
+            st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown('<div class="section-label">Guest categories</div>', unsafe_allow_html=True)
+        category_cols = st.columns([1.05, 1.35, 1.35, 1.35, 1.35])
+        with category_cols[0]:
+            num_adulti = st.number_input("Adults\n_Adulti_", min_value=0, max_value=20, value=1)
+        with category_cols[1]:
+            num_ridotti = st.number_input("Junior (born 2011-2018)\n_Junior (nati dal 2011 al 2018)_", min_value=0, max_value=20, value=0)
+        with category_cols[2]:
+            num_young = st.number_input("Youth (born 2002-2010)\n_Youth (nati dal 2002 al 2010)_", min_value=0, max_value=20, value=0)
+        with category_cols[3]:
+            num_senior = st.number_input("Senior (born before 2002)\n_Senior (nati prima del 2002)_", min_value=0, max_value=20, value=0)
+        with category_cols[4]:
+            num_baby = st.number_input("Baby (born from 2019 onwards)\n_Baby (nati dal 2019 in avanti)_", min_value=0, max_value=20, value=0)
+
+        submit_calc = st.form_submit_button("Calculate _Calcola_", use_container_width=True)
+
+    if submit_calc:
+        if get_period_info_for_date(data_inizio) is None:
+            st.error(
+                "Invalid start date. Please select a date within the winter opening periods. "
+                "Valid periods run from 28/11/2026 to 02/05/2027. "
+                "_Data iniziale non valida. Seleziona una data all'interno dei periodi di apertura invernali. "
+                "I periodi validi vanno dal 28/11/2026 al 02/05/2027._"
+            )
+        elif not reservation_reference.strip():
+            st.error("Please enter your full name or reservation number. _Inserisci nome e cognome oppure il numero di prenotazione._")
+        elif not email.strip() or "@" not in email:
+            st.error("Please enter a valid email address. _Inserisci un indirizzo email valido._")
+        elif num_adulti + num_ridotti + num_young + num_senior + num_baby == 0:
+            st.error("Please select at least one person. _Seleziona almeno una persona._")
+        else:
+            total_price, selected_period, pricing_summary, daily_details, segment_summary, tariff_total, deposit_total = calculate_total_price(
+                data_inizio,
+                num_giorni,
+                num_adulti,
+                num_ridotti,
+                num_young,
+                num_senior,
+                num_baby,
+            )
+            st.session_state.reservation = {
+                "nome": reservation_reference.strip(),
+                "cognome": "",
+                "data_inizio": data_inizio.isoformat(),
+                "num_giorni": num_giorni,
+                "num_adulti": num_adulti,
+                "num_ridotti": num_ridotti,
+                "num_young": num_young,
+                "num_senior": num_senior,
+                "num_baby": num_baby,
+                "periodo_applicato": selected_period,
+                "email": email.strip(),
+            }
+            st.session_state.total_price = total_price
+            st.session_state.tariff_total = tariff_total
+            st.session_state.deposit_total = deposit_total
+            st.session_state.selected_period = selected_period
+            st.session_state.pricing_summary = pricing_summary
+            st.session_state.daily_details = daily_details
+            st.session_state.segment_summary = segment_summary
+
+            if max_days < 14:
+                st.warning(
+                    f"The maximum number of valid days for this date is {max_days}, "
+                    "to avoid exceeding the ski area opening period. "
+                    f"_Il numero massimo di giorni validi per questa data è {max_days}, "
+                    "per non superare il periodo di apertura degli impianti._"
+                )
+
+    if st.session_state.reservation is not None:
+        table_rows = []
+        for row in st.session_state.pricing_summary:
+            if row["Categoria"] == "cauzione":
+                continue
+            quantity = row["Numero selezionati"]
+            if quantity <= 0:
+                continue
+            table_rows.append(
+                {
+                    "Validity from _Validità dal_": st.session_state.reservation["data_inizio"],
+                    "Category _Categoria_": row["Categoria"].title(),
+                    "Quantity _Quantità_": quantity,
+                    "Amount _Importo_": row["Totale categoria"],
+                    "Number of days _Numero di giorni_": st.session_state.reservation["num_giorni"],
+                }
+            )
+
+        if table_rows:
+            st.markdown('<div class="reservation-card">', unsafe_allow_html=True)
+            st.table(table_rows)
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        st.write(
+            f"The total is € {st.session_state.total_price:.2f}, "
+            f"including tariff € {st.session_state.tariff_total:.2f} and deposit € {st.session_state.deposit_total:.2f}. "
+            f"_Il totale è di € {st.session_state.total_price:.2f}, "
+            f"di cui tariffa € {st.session_state.tariff_total:.2f} e cauzione € {st.session_state.deposit_total:.2f}._"
+        )
+
+        tariff_sconto_carta = st.session_state.tariff_total * 0.95
+        tariff_sconto_contanti = st.session_state.tariff_total * 0.93
+        st.write(
+            "Upon arrival at the agency, if you pay by credit or debit card, the tariff will be discounted by 5% "
+            f"(discounted tariff € {tariff_sconto_carta:.2f}, deposit € {st.session_state.deposit_total:.2f}, "
+            f"final total € {tariff_sconto_carta + st.session_state.deposit_total:.2f}). "
+            "_All'arrivo in agenzia, se pagherai con carta di credito/debito, la tariffa sarà scontata del 5% "
+            f"(tariffa scontata € {tariff_sconto_carta:.2f}, cauzione € {st.session_state.deposit_total:.2f}, "
+            f"totale finale € {tariff_sconto_carta + st.session_state.deposit_total:.2f})._"
+        )
+        st.write(
+            "Upon arrival at the agency, if you pay in cash, the tariff will be discounted by 7% "
+            f"(discounted tariff € {tariff_sconto_contanti:.2f}, deposit € {st.session_state.deposit_total:.2f}, "
+            f"final total € {tariff_sconto_contanti + st.session_state.deposit_total:.2f}). "
+            "_All'arrivo in agenzia, se pagherai in contanti, la tariffa sarà scontata del 7% "
+            f"(tariffa scontata € {tariff_sconto_contanti:.2f}, cauzione € {st.session_state.deposit_total:.2f}, "
+            f"totale finale € {tariff_sconto_contanti + st.session_state.deposit_total:.2f})._"
+        )
+
+        if st.button("Send _Invia_", use_container_width=True):
+            sent, message = send_reservation_email(
+                st.session_state.reservation,
+                st.session_state.total_price,
+                st.session_state.reservation["email"],
+            )
+            if sent:
+                st.success(message)
+            else:
+                st.error(message)
+
+
+if __name__ == "__main__":
+    main()
