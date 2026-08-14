@@ -282,12 +282,38 @@ def calculate_total_price(start_date, num_days, num_adulti, num_ridotti, num_you
 
 
 def get_smtp_settings() -> dict[str, str]:
+    default_settings = {
+        "server": "",
+        "port": "",
+        "username": "",
+        "password": "",
+        "from_email": "",
+    }
+
+    env_values = {
+        "server": os.getenv("SMTP_SERVER", "").strip(),
+        "port": os.getenv("SMTP_PORT", "").strip(),
+        "username": os.getenv("SMTP_USERNAME", "").strip(),
+        "password": os.getenv("SMTP_PASSWORD", "").strip(),
+        "from_email": os.getenv("SMTP_FROM_EMAIL", "").strip(),
+    }
+    if any(env_values.values()):
+        return env_values
+
+    try:
+        secret_values = {
+            "server": str(st.secrets.get("SMTP_SERVER", "")).strip(),
+            "port": str(st.secrets.get("SMTP_PORT", "")).strip(),
+            "username": str(st.secrets.get("SMTP_USERNAME", "")).strip(),
+            "password": str(st.secrets.get("SMTP_PASSWORD", "")).strip(),
+            "from_email": str(st.secrets.get("SMTP_FROM_EMAIL", "")).strip(),
+        }
+    except Exception:
+        return default_settings
+
     return {
-        "server": os.getenv("SMTP_SERVER", ""),
-        "port": os.getenv("SMTP_PORT", ""),
-        "username": os.getenv("SMTP_USERNAME", ""),
-        "password": os.getenv("SMTP_PASSWORD", ""),
-        "from_email": os.getenv("SMTP_FROM_EMAIL", ""),
+        key: value if value not in (None, "") else default_settings[key]
+        for key, value in secret_values.items()
     }
 
 
@@ -315,7 +341,7 @@ def send_reservation_email(reservation: dict, total_price: int, customer_email: 
         f"Numero di giorni: {reservation['num_giorni']}",
         f"Numero adulti: {reservation['num_adulti']}",
         f"Numero junior (nati dal 2011 al 2018): {reservation['num_ridotti']}",
-        f"Numero youth (nati dal 2002 al 2010): {reservation['num_youth']}",
+        f"Numero youth (nati dal 2002 al 2010): {reservation['num_young']}",
         f"Numero senior (nati prima del 2002): {reservation['num_senior']}",
         f"Numero baby (nati dal 2019 in avanti): {reservation['num_baby']}",
         f"Indirizzo mail: {customer_email}",
@@ -389,6 +415,34 @@ def main() -> None:
             padding: 1rem 1.1rem;
             margin-top: 1rem;
             box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+            color: #0f172a;
+        }
+        .summary-box {
+            background: linear-gradient(180deg, #f8fbff 0%, #edf5ff 100%);
+            border: 1px solid rgba(20, 119, 214, 0.16);
+            border-radius: 14px;
+            padding: 0.9rem 1rem;
+            height: 100%;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);
+        }
+        .summary-label {
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #4b5d7a;
+            margin-bottom: 0.35rem;
+            font-weight: 700;
+        }
+        .summary-value {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+        .summary-section-title {
+            margin: 0.6rem 0 0.7rem 0;
+            font-size: 1rem;
+            font-weight: 700;
             color: #0f172a;
         }
         .section-label {
@@ -604,30 +658,66 @@ def main() -> None:
             st.table(table_rows)
             st.markdown('</div>', unsafe_allow_html=True)
 
-        st.write(
-            f"The total is € {st.session_state.total_price:.2f}, "
-            f"including tariff € {st.session_state.tariff_total:.2f} and deposit € {st.session_state.deposit_total:.2f}. "
-            f"_Il totale è di € {st.session_state.total_price:.2f}, "
-            f"di cui tariffa € {st.session_state.tariff_total:.2f} e cauzione € {st.session_state.deposit_total:.2f}._"
-        )
-
         tariff_sconto_carta = st.session_state.tariff_total * 0.95
         tariff_sconto_contanti = st.session_state.tariff_total * 0.93
+
+        total_summary_en = [
+            {"Item": "Tariff", "Amount": f"€ {st.session_state.tariff_total:.2f}"},
+            {"Item": "Deposit", "Amount": f"€ {st.session_state.deposit_total:.2f}"},
+            {"Item": "Final total", "Amount": f"€ {st.session_state.total_price:.2f}"},
+        ]
+        total_summary_it = [
+            {"Voce": "Tariffa", "Importo": f"€ {st.session_state.tariff_total:.2f}"},
+            {"Voce": "Cauzione", "Importo": f"€ {st.session_state.deposit_total:.2f}"},
+            {"Voce": "Totale finale", "Importo": f"€ {st.session_state.total_price:.2f}"},
+        ]
+
+        st.markdown('<div class="reservation-card">', unsafe_allow_html=True)
+        summary_cols = st.columns(2)
+
+        with summary_cols[0]:
+            st.markdown('<div class="summary-section-title">Summary (English)</div>', unsafe_allow_html=True)
+            for item in total_summary_en:
+                st.markdown(
+                    f"""
+                    <div class="summary-box">
+                        <div class="summary-label">{item['Item']}</div>
+                        <div class="summary-value">{item['Amount']}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+        with summary_cols[1]:
+            st.markdown('<div class="summary-section-title">Riepilogo (Italiano)</div>', unsafe_allow_html=True)
+            for item in total_summary_it:
+                st.markdown(
+                    f"""
+                    <div class="summary-box">
+                        <div class="summary-label">{item['Voce']}</div>
+                        <div class="summary-value">{item['Importo']}</div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
         st.write(
-            "Upon arrival at the agency, if you pay by credit or debit card, the tariff will be discounted by 5% "
+            "If you pay by credit or debit card, the tariff will be discounted by 5% "
             f"(discounted tariff € {tariff_sconto_carta:.2f}, deposit € {st.session_state.deposit_total:.2f}, "
             f"final total € {tariff_sconto_carta + st.session_state.deposit_total:.2f}). "
-            "_All'arrivo in agenzia, se pagherai con carta di credito/debito, la tariffa sarà scontata del 5% "
+            "Se pagherai con carta di credito/debito, la tariffa sarà scontata del 5% "
             f"(tariffa scontata € {tariff_sconto_carta:.2f}, cauzione € {st.session_state.deposit_total:.2f}, "
-            f"totale finale € {tariff_sconto_carta + st.session_state.deposit_total:.2f})._"
+            f"totale finale € {tariff_sconto_carta + st.session_state.deposit_total:.2f})."
         )
         st.write(
-            "Upon arrival at the agency, if you pay in cash, the tariff will be discounted by 7% "
+            "If you pay in cash, the tariff will be discounted by 7% "
             f"(discounted tariff € {tariff_sconto_contanti:.2f}, deposit € {st.session_state.deposit_total:.2f}, "
             f"final total € {tariff_sconto_contanti + st.session_state.deposit_total:.2f}). "
-            "_All'arrivo in agenzia, se pagherai in contanti, la tariffa sarà scontata del 7% "
+            "Se pagherai in contanti, la tariffa sarà scontata del 7% "
             f"(tariffa scontata € {tariff_sconto_contanti:.2f}, cauzione € {st.session_state.deposit_total:.2f}, "
-            f"totale finale € {tariff_sconto_contanti + st.session_state.deposit_total:.2f})._"
+            f"totale finale € {tariff_sconto_contanti + st.session_state.deposit_total:.2f})."
         )
 
         if st.button("Send _Invia_", use_container_width=True):
@@ -644,3 +734,13 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
+
