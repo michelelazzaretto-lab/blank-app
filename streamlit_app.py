@@ -584,21 +584,25 @@ def main() -> None:
                 color: #0f172a;
             }
             .summary-box {
-                background: linear-gradient(180deg, #e8f1ff 0%, #dce8ff 100%) !important;
-                border: 1px solid rgba(29, 78, 216, 0.25) !important;
+                background: linear-gradient(180deg, #d4e6ff 0%, #bfd6ff 100%) !important;
+                border: 2px solid rgba(29, 78, 216, 0.35) !important;
+                box-shadow: inset 0 2px 4px rgba(29, 78, 216, 0.1) !important;
             }
             .section-label,
             .summary-label {
-                color: #1e3a5f !important;
-                font-weight: 700;
+                color: #1f4a9f !important;
+                font-weight: 900 !important;
+                font-size: 0.75rem !important;
             }
             .summary-value {
                 color: #0a1428 !important;
                 font-weight: 900 !important;
+                font-size: 1.35rem !important;
             }
             .summary-section-title {
-                color: #0f172a !important;
-                font-weight: 800 !important;
+                color: #0a1428 !important;
+                font-weight: 900 !important;
+                font-size: 1.1rem !important;
             }
             .payment-table th,
             .payment-table td {
