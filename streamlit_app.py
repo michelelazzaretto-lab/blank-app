@@ -572,6 +572,51 @@ def main() -> None:
             }
         }
 
+        @media (prefers-color-scheme: light) {
+            .stApp {
+                background: linear-gradient(180deg, #f5f7fb 0%, #eef3fb 100%);
+                color: #0f172a;
+            }
+            section[data-testid="stForm"],
+            .reservation-card {
+                background: rgba(255, 255, 255, 0.95);
+                border-color: rgba(26, 55, 101, 0.12);
+                color: #0f172a;
+            }
+            .section-label,
+            .summary-label {
+                color: #1e3a5f;
+                font-weight: 700;
+            }
+            .summary-value {
+                color: #0f172a;
+            }
+            .summary-section-title {
+                color: #0f172a;
+            }
+            .payment-table th,
+            .payment-table td {
+                color: #1a2942;
+                border-bottom: 1px solid rgba(15, 23, 42, 0.12);
+            }
+            .payment-tag-card {
+                background: rgba(59, 130, 246, 0.16);
+                color: #1d4ed8;
+            }
+            .payment-tag-cash {
+                background: rgba(16, 185, 129, 0.16);
+                color: #047857;
+            }
+            div[data-testid="stButton"] > button {
+                background: linear-gradient(180deg, #1f8fff 0%, #1477d6 100%);
+                color: #ffffff;
+            }
+            div[data-testid="stDateInput"] label,
+            div[data-testid="stNumberInput"] label {
+                color: #1e3a5f;
+            }
+        }
+
         @media (prefers-color-scheme: dark) {
             .stApp {
                 background: linear-gradient(180deg, #0b1220 0%, #111827 100%);
@@ -584,12 +629,37 @@ def main() -> None:
                 color: #edf3ff;
                 box-shadow: 0 10px 28px rgba(2, 6, 23, 0.45);
             }
-            .section-label {
-                color: #bfd2ff;
+            .section-label,
+            .summary-label {
+                color: #cbd5e1;
+                font-weight: 700;
+            }
+            .summary-value {
+                color: #f1f5f9;
+            }
+            .summary-section-title {
+                color: #e2e8f0;
+            }
+            .payment-table th,
+            .payment-table td {
+                color: #cbd5e1;
+                border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            }
+            .payment-tag-card {
+                background: rgba(59, 130, 246, 0.2);
+                color: #60a5fa;
+            }
+            .payment-tag-cash {
+                background: rgba(16, 185, 129, 0.2);
+                color: #34d399;
             }
             div[data-testid="stButton"] > button {
                 background: linear-gradient(180deg, #2b7fff 0%, #1d5fd6 100%);
                 color: #ffffff;
+            }
+            div[data-testid="stDateInput"] label,
+            div[data-testid="stNumberInput"] label {
+                color: #cbd5e1;
             }
         }
         </style>
