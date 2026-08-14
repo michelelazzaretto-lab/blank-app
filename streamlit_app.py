@@ -524,6 +524,21 @@ def main() -> None:
             color: #4b5d7a;
             margin: 0.7rem 0 0.5rem;
         }
+        div[data-testid="stTextInput"] label,
+        div[data-testid="stDateInput"] label,
+        div[data-testid="stNumberInput"] label,
+        div[data-testid="stTextInput"] p,
+        div[data-testid="stDateInput"] p,
+        div[data-testid="stNumberInput"] p {
+            color: #0f172a !important;
+            font-weight: 600 !important;
+        }
+        div[data-testid="stTable"] table,
+        div[data-testid="stTable"] th,
+        div[data-testid="stTable"] td {
+            color: #0f172a !important;
+            background-color: transparent !important;
+        }
         div[data-testid="stDateInput"],
         div[data-testid="stNumberInput"] {
             width: 100% !important;
@@ -621,9 +636,18 @@ def main() -> None:
                 background: linear-gradient(180deg, #1f8fff 0%, #1477d6 100%);
                 color: #ffffff;
             }
+            div[data-testid="stTextInput"] label,
             div[data-testid="stDateInput"] label,
-            div[data-testid="stNumberInput"] label {
+            div[data-testid="stNumberInput"] label,
+            div[data-testid="stTextInput"] p,
+            div[data-testid="stDateInput"] p,
+            div[data-testid="stNumberInput"] p {
                 color: #1e3a5f !important;
+            }
+            div[data-testid="stTable"] table,
+            div[data-testid="stTable"] th,
+            div[data-testid="stTable"] td {
+                color: #0a1428 !important;
             }
             [data-testid="metric-container"] {
                 background: linear-gradient(180deg, #d4e6ff 0%, #bfd6ff 100%) !important;
@@ -677,9 +701,18 @@ def main() -> None:
                 background: linear-gradient(180deg, #2b7fff 0%, #1d5fd6 100%);
                 color: #ffffff;
             }
+            div[data-testid="stTextInput"] label,
             div[data-testid="stDateInput"] label,
-            div[data-testid="stNumberInput"] label {
-                color: #cbd5e1;
+            div[data-testid="stNumberInput"] label,
+            div[data-testid="stTextInput"] p,
+            div[data-testid="stDateInput"] p,
+            div[data-testid="stNumberInput"] p {
+                color: #e2e8f0 !important;
+            }
+            div[data-testid="stTable"] table,
+            div[data-testid="stTable"] th,
+            div[data-testid="stTable"] td {
+                color: #f8fafc !important;
             }
         }
         </style>
