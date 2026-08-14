@@ -123,15 +123,13 @@ def should_show_days_warning(num_days, max_days):
 
 
 def get_num_giorni_bounds(start_date):
-    contiguous_end = get_contiguous_end_date(start_date)
-    if contiguous_end is None:
+    period_info = get_period_info_for_date(start_date)
+    if period_info is None:
         return 5, 5, 5
 
-    allowed_days = min(14, (contiguous_end - start_date).days + 1)
-
     min_days = 5
-    max_days = max(min_days, allowed_days)
-    default_days = min(5, max_days)
+    max_days = 14
+    default_days = 5
     return min_days, max_days, default_days
 
 
