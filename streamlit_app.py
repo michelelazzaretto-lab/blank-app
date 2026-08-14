@@ -445,6 +445,42 @@ def main() -> None:
             font-weight: 700;
             color: #0f172a;
         }
+        .payment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.8rem;
+            font-size: 0.94rem;
+        }
+        .payment-table th, .payment-table td {
+            padding: 0.8rem 0.7rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+            vertical-align: top;
+        }
+        .payment-row-card {
+            background: rgba(59, 130, 246, 0.08);
+        }
+        .payment-row-cash {
+            background: rgba(16, 185, 129, 0.08);
+        }
+        .payment-tag {
+            display: inline-block;
+            font-size: 0.68rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 0.22rem 0.5rem;
+            border-radius: 999px;
+            margin-bottom: 0.35rem;
+        }
+        .payment-tag-card {
+            background: rgba(59, 130, 246, 0.14);
+            color: #1d4ed8;
+        }
+        .payment-tag-cash {
+            background: rgba(16, 185, 129, 0.14);
+            color: #047857;
+        }
         .section-label {
             font-size: 0.78rem;
             font-weight: 700;
@@ -658,67 +694,73 @@ def main() -> None:
             st.table(table_rows)
             st.markdown('</div>', unsafe_allow_html=True)
 
-        tariff_sconto_carta = st.session_state.tariff_total * 0.95
-        tariff_sconto_contanti = st.session_state.tariff_total * 0.93
-
-        total_summary_en = [
-            {"Item": "Tariff", "Amount": f"€ {st.session_state.tariff_total:.2f}"},
-            {"Item": "Deposit", "Amount": f"€ {st.session_state.deposit_total:.2f}"},
-            {"Item": "Final total", "Amount": f"€ {st.session_state.total_price:.2f}"},
-        ]
-        total_summary_it = [
-            {"Voce": "Tariffa", "Importo": f"€ {st.session_state.tariff_total:.2f}"},
-            {"Voce": "Cauzione", "Importo": f"€ {st.session_state.deposit_total:.2f}"},
-            {"Voce": "Totale finale", "Importo": f"€ {st.session_state.total_price:.2f}"},
-        ]
+        tariff_sconto_carta = st.session_state.tariff_total * 0.93
+        tariff_sconto_contanti = st.session_state.tariff_total * 0.95
+        total_card_with_deposit = tariff_sconto_carta + st.session_state.deposit_total
+        total_cash_with_deposit = tariff_sconto_contanti + st.session_state.deposit_total
 
         st.markdown('<div class="reservation-card">', unsafe_allow_html=True)
         summary_cols = st.columns(2)
 
         with summary_cols[0]:
-            st.markdown('<div class="summary-section-title">Summary (English)</div>', unsafe_allow_html=True)
-            for item in total_summary_en:
-                st.markdown(
-                    f"""
-                    <div class="summary-box">
-                        <div class="summary-label">{item['Item']}</div>
-                        <div class="summary-value">{item['Amount']}</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+            st.markdown('<div class="summary-section-title">Total / Totale</div>', unsafe_allow_html=True)
+            st.markdown(
+                f"""
+                <div class="summary-box">
+                    <div class="summary-label">Total</div>
+                    <div class="summary-value">€ {st.session_state.total_price:.2f}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
         with summary_cols[1]:
-            st.markdown('<div class="summary-section-title">Riepilogo (Italiano)</div>', unsafe_allow_html=True)
-            for item in total_summary_it:
-                st.markdown(
-                    f"""
-                    <div class="summary-box">
-                        <div class="summary-label">{item['Voce']}</div>
-                        <div class="summary-value">{item['Importo']}</div>
-                    </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+            st.markdown('<div class="summary-section-title">Deposit / Cauzione</div>', unsafe_allow_html=True)
+            st.markdown(
+                f"""
+                <div class="summary-box">
+                    <div class="summary-label">Deposit</div>
+                    <div class="summary-value">€ {st.session_state.deposit_total:.2f}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
+        st.markdown(
+            f"""
+            <table class="payment-table">
+              <thead>
+                <tr>
+                  <th>Payment option / Opzione di pagamento</th>
+                  <th>Discounted tariff / Tariffa scontata</th>
+                  <th>Total with deposit / Totale con cauzione</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="payment-row-card">
+                  <td>
+                    <span class="payment-tag payment-tag-card">Card / Carta</span><br>
+                    Card Payment / Pagamento con carta<br>
+                    <strong>(7% discount / 7% sconto)</strong>
+                  </td>
+                  <td>€ {tariff_sconto_carta:.2f}</td>
+                  <td><strong>€ {total_card_with_deposit:.2f}</strong></td>
+                </tr>
+                <tr class="payment-row-cash">
+                  <td>
+                    <span class="payment-tag payment-tag-cash">Cash / Contanti</span><br>
+                    Cash payment / Pagamento in contanti<br>
+                    <strong>(5% discount / 5% sconto)</strong>
+                  </td>
+                  <td>€ {tariff_sconto_contanti:.2f}</td>
+                  <td><strong>€ {total_cash_with_deposit:.2f}</strong></td>
+                </tr>
+              </tbody>
+            </table>
+            """,
+            unsafe_allow_html=True,
+        )
         st.markdown('</div>', unsafe_allow_html=True)
-
-        st.write(
-            "If you pay by credit or debit card, the tariff will be discounted by 5% "
-            f"(discounted tariff € {tariff_sconto_carta:.2f}, deposit € {st.session_state.deposit_total:.2f}, "
-            f"final total € {tariff_sconto_carta + st.session_state.deposit_total:.2f}). "
-            "Se pagherai con carta di credito/debito, la tariffa sarà scontata del 5% "
-            f"(tariffa scontata € {tariff_sconto_carta:.2f}, cauzione € {st.session_state.deposit_total:.2f}, "
-            f"totale finale € {tariff_sconto_carta + st.session_state.deposit_total:.2f})."
-        )
-        st.write(
-            "If you pay in cash, the tariff will be discounted by 7% "
-            f"(discounted tariff € {tariff_sconto_contanti:.2f}, deposit € {st.session_state.deposit_total:.2f}, "
-            f"final total € {tariff_sconto_contanti + st.session_state.deposit_total:.2f}). "
-            "Se pagherai in contanti, la tariffa sarà scontata del 7% "
-            f"(tariffa scontata € {tariff_sconto_contanti:.2f}, cauzione € {st.session_state.deposit_total:.2f}, "
-            f"totale finale € {tariff_sconto_contanti + st.session_state.deposit_total:.2f})."
-        )
 
         if st.button("Send _Invia_", use_container_width=True):
             sent, message = send_reservation_email(
@@ -734,10 +776,6 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
-
-
 
 
 
