@@ -328,7 +328,7 @@ def get_smtp_settings() -> dict[str, str]:
     }
 
 
-def send_reservation_email(reservation: dict, total_price: int, customer_email: str) -> tuple[bool, str]:
+def send_reservation_email(reservation: dict, total_price: int, customer_email: str, tariff_total: float, deposit_total: float, pricing_summary: list) -> tuple[bool, str]:
     smtp_settings = get_smtp_settings()
     smtp_server = smtp_settings["server"]
     smtp_port = smtp_settings["port"]
@@ -344,28 +344,46 @@ def send_reservation_email(reservation: dict, total_price: int, customer_email: 
 
     recipients = [PREDEFINED_RECIPIENT, customer_email]
     subject = "Nuova prenotazione skipass"
-    tariff_sconto_carta = total_price - 5 * (reservation['num_adulti'] + reservation['num_ridotti'] + reservation['num_young'] + reservation['num_senior'] + reservation['num_baby'])
-    tariff_sconto_contanti = total_price - 7 * (reservation['num_adulti'] + reservation['num_ridotti'] + reservation['num_young'] + reservation['num_senior'] + reservation['num_baby'])
-    staff_total = total_price
-    deposit_total = 5 * (reservation['num_adulti'] + reservation['num_ridotti'] + reservation['num_young'] + reservation['num_senior'] + reservation['num_baby'])
+    
+    tariff_sconto_carta = tariff_total * 0.95
+    tariff_sconto_contanti = tariff_total * 0.93
+    total_card_with_deposit = tariff_sconto_carta + deposit_total
+    total_cash_with_deposit = tariff_sconto_contanti + deposit_total
 
     body_lines = [
-        "Dettaglio prenotazione skipass:",
+        "Customer / Cliente",
         f"Riferimento: {reservation['nome']}",
-        f"Skipass valido dal: {reservation['data_inizio']}",
-        f"Numero di giorni: {reservation['num_giorni']}",
-        f"Numero adulti: {reservation['num_adulti']}",
-        f"Numero junior (nati dal 2011 al 2018): {reservation['num_ridotti']}",
-        f"Numero youth (nati dal 2002 al 2010): {reservation['num_young']}",
-        f"Numero senior (nati prima del 2002): {reservation['num_senior']}",
-        f"Numero baby (nati dal 2019 in avanti): {reservation['num_baby']}",
-        f"Tariffa totale: € {staff_total:.2f}",
-        f"Cauzione: € {deposit_total:.2f}",
-        f"Totale finale: € {total_price:.2f}",
-        f"Pagamento con carta (5% sconto): € {tariff_sconto_carta:.2f} + cauzione € {deposit_total:.2f} = € {tariff_sconto_carta + deposit_total:.2f}",
-        f"Pagamento in contanti (7% sconto): € {tariff_sconto_contanti:.2f} + cauzione € {deposit_total:.2f} = € {tariff_sconto_contanti + deposit_total:.2f}",
-        f"Indirizzo mail: {customer_email}",
+        "",
+        "Dettaglio prenotazione skipass / Reservation details",
+        f"Skipass valido dal / Valid from: {reservation['data_inizio']}",
+        f"Numero di giorni / Number of days: {reservation['num_giorni']}",
+        "",
+        "Categorie / Categories",
     ]
+    
+    for row in pricing_summary:
+        categoria = row["Categoria"]
+        if categoria == "cauzione":
+            continue
+        num = row["Numero selezionati"]
+        if num <= 0:
+            continue
+        importo = row["Totale categoria"]
+        body_lines.append(f"  {categoria.capitalize()}: {num} x {importo}")
+    
+    body_lines.extend([
+        "",
+        "Riepilogo totali / Payment Summary",
+        f"Tariffa totale / Total tariff: € {tariff_total:.2f}",
+        f"Cauzione / Deposit: € {deposit_total:.2f}",
+        f"Totale generale / Total: € {total_price:.2f}",
+        "",
+        "Opzioni di pagamento / Payment Options",
+        f"Con carta (5% sconto) / Card (5% discount): € {tariff_sconto_carta:.2f} + cauzione € {deposit_total:.2f} = € {total_card_with_deposit:.2f}",
+        f"In contanti (7% sconto) / Cash (7% discount): € {tariff_sconto_contanti:.2f} + cauzione € {deposit_total:.2f} = € {total_cash_with_deposit:.2f}",
+        "",
+        f"Email: {customer_email}",
+    ])
 
     message = EmailMessage()
     message["From"] = smtp_from
@@ -791,6 +809,9 @@ def main() -> None:
                 st.session_state.reservation,
                 st.session_state.total_price,
                 st.session_state.reservation["email"],
+                st.session_state.tariff_total,
+                st.session_state.deposit_total,
+                st.session_state.pricing_summary,
             )
             if sent:
                 st.success(message)
