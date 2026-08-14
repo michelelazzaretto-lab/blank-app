@@ -149,6 +149,15 @@ def get_contiguous_end_date(start_date):
     return None
 
 
+def is_reservation_valid(start_date, num_days):
+    """Check if all days of the reservation are within valid periods."""
+    for offset in range(num_days):
+        current_date = start_date + timedelta(days=offset)
+        if get_skipass_period_for_date(current_date) is None:
+            return False
+    return True
+
+
 def choose_skipass_period(start_date, num_days):
     counts = {period_name: 0 for period_name in PERIODS}
     for offset in range(num_days):
@@ -633,6 +642,13 @@ def main() -> None:
                 "Valid periods run from 28/11/2026 to 02/05/2027. "
                 "_Data iniziale non valida. Seleziona una data all'interno dei periodi di apertura invernali. "
                 "I periodi validi vanno dal 28/11/2026 al 02/05/2027._"
+            )
+        elif not is_reservation_valid(data_inizio, num_giorni):
+            st.error(
+                f"Invalid reservation: the selected {num_giorni} days extend beyond the valid ski periods. "
+                "Please choose a different start date or number of days. "
+                f"_Prenotazione non valida: i {num_giorni} giorni selezionati vanno oltre i periodi di validità degli impianti. "
+                "Seleziona una data diversa o un numero di giorni diverso._"
             )
         elif not reservation_reference.strip():
             st.error("Please enter your full name or reservation number. _Inserisci nome e cognome oppure il numero di prenotazione._")
