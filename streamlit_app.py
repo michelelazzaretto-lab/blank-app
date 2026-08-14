@@ -583,20 +583,26 @@ def main() -> None:
                 border-color: rgba(26, 55, 101, 0.12);
                 color: #0f172a;
             }
+            .summary-box {
+                background: linear-gradient(180deg, #e8f1ff 0%, #dce8ff 100%) !important;
+                border: 1px solid rgba(29, 78, 216, 0.25) !important;
+            }
             .section-label,
             .summary-label {
-                color: #1e3a5f;
+                color: #1e3a5f !important;
                 font-weight: 700;
             }
             .summary-value {
-                color: #0f172a;
+                color: #0a1428 !important;
+                font-weight: 900 !important;
             }
             .summary-section-title {
-                color: #0f172a;
+                color: #0f172a !important;
+                font-weight: 800 !important;
             }
             .payment-table th,
             .payment-table td {
-                color: #1a2942;
+                color: #1a2942 !important;
                 border-bottom: 1px solid rgba(15, 23, 42, 0.12);
             }
             .payment-tag-card {
@@ -613,7 +619,7 @@ def main() -> None:
             }
             div[data-testid="stDateInput"] label,
             div[data-testid="stNumberInput"] label {
-                color: #1e3a5f;
+                color: #1e3a5f !important;
             }
         }
 
