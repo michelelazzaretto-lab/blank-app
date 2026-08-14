@@ -694,8 +694,8 @@ def main() -> None:
             st.table(table_rows)
             st.markdown('</div>', unsafe_allow_html=True)
 
-        tariff_sconto_carta = st.session_state.tariff_total * 0.93
-        tariff_sconto_contanti = st.session_state.tariff_total * 0.95
+        tariff_sconto_carta = st.session_state.tariff_total * 0.95
+        tariff_sconto_contanti = st.session_state.tariff_total * 0.93
         total_card_with_deposit = tariff_sconto_carta + st.session_state.deposit_total
         total_cash_with_deposit = tariff_sconto_contanti + st.session_state.deposit_total
 
@@ -741,7 +741,7 @@ def main() -> None:
                   <td>
                     <span class="payment-tag payment-tag-card">Card / Carta</span><br>
                     Card Payment / Pagamento con carta<br>
-                    <strong>(7% discount / 7% sconto)</strong>
+                    <strong>(5% discount / 5% sconto)</strong>
                   </td>
                   <td>€ {tariff_sconto_carta:.2f}</td>
                   <td><strong>€ {total_card_with_deposit:.2f}</strong></td>
@@ -750,7 +750,7 @@ def main() -> None:
                   <td>
                     <span class="payment-tag payment-tag-cash">Cash / Contanti</span><br>
                     Cash payment / Pagamento in contanti<br>
-                    <strong>(5% discount / 5% sconto)</strong>
+                    <strong>(7% discount / 7% sconto)</strong>
                   </td>
                   <td>€ {tariff_sconto_contanti:.2f}</td>
                   <td><strong>€ {total_cash_with_deposit:.2f}</strong></td>
@@ -776,6 +776,13 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
 
 
 
