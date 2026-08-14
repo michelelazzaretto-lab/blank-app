@@ -333,10 +333,14 @@ def send_reservation_email(reservation: dict, total_price: int, customer_email: 
 
     recipients = [PREDEFINED_RECIPIENT, customer_email]
     subject = "Nuova prenotazione skipass"
+    tariff_sconto_carta = total_price - 5 * (reservation['num_adulti'] + reservation['num_ridotti'] + reservation['num_young'] + reservation['num_senior'] + reservation['num_baby'])
+    tariff_sconto_contanti = total_price - 7 * (reservation['num_adulti'] + reservation['num_ridotti'] + reservation['num_young'] + reservation['num_senior'] + reservation['num_baby'])
+    staff_total = total_price
+    deposit_total = 5 * (reservation['num_adulti'] + reservation['num_ridotti'] + reservation['num_young'] + reservation['num_senior'] + reservation['num_baby'])
+
     body_lines = [
         "Dettaglio prenotazione skipass:",
-        f"Nome: {reservation['nome']}",
-        f"Cognome: {reservation['cognome']}",
+        f"Riferimento: {reservation['nome']}",
         f"Skipass valido dal: {reservation['data_inizio']}",
         f"Numero di giorni: {reservation['num_giorni']}",
         f"Numero adulti: {reservation['num_adulti']}",
@@ -344,10 +348,12 @@ def send_reservation_email(reservation: dict, total_price: int, customer_email: 
         f"Numero youth (nati dal 2002 al 2010): {reservation['num_young']}",
         f"Numero senior (nati prima del 2002): {reservation['num_senior']}",
         f"Numero baby (nati dal 2019 in avanti): {reservation['num_baby']}",
+        f"Tariffa totale: € {staff_total:.2f}",
+        f"Cauzione: € {deposit_total:.2f}",
+        f"Totale finale: € {total_price:.2f}",
+        f"Pagamento con carta (5% sconto): € {tariff_sconto_carta:.2f} + cauzione € {deposit_total:.2f} = € {tariff_sconto_carta + deposit_total:.2f}",
+        f"Pagamento in contanti (7% sconto): € {tariff_sconto_contanti:.2f} + cauzione € {deposit_total:.2f} = € {tariff_sconto_contanti + deposit_total:.2f}",
         f"Indirizzo mail: {customer_email}",
-        f"Totale tariffa: € {total_price - 5 * (reservation['num_adulti'] + reservation['num_ridotti'] + reservation['num_young'] + reservation['num_senior'] + reservation['num_baby']):.2f}",
-        f"Totale cauzione: € {5 * (reservation['num_adulti'] + reservation['num_ridotti'] + reservation['num_young'] + reservation['num_senior'] + reservation['num_baby']):.2f}",
-        f"Totale da pagare: € {total_price:.2f}",
     ]
 
     message = EmailMessage()
@@ -776,10 +782,6 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
-
-
-
 
 
 
