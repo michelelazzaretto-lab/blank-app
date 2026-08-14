@@ -625,6 +625,16 @@ def main() -> None:
             div[data-testid="stNumberInput"] label {
                 color: #1e3a5f !important;
             }
+            [data-testid="metric-container"] {
+                background: linear-gradient(180deg, #d4e6ff 0%, #bfd6ff 100%) !important;
+                border: 2px solid rgba(29, 78, 216, 0.35) !important;
+                border-radius: 14px !important;
+                padding: 1rem !important;
+            }
+            [data-testid="metric-container"] > div {
+                color: #0a1428 !important;
+                font-weight: 900 !important;
+            }
         }
 
         @media (prefers-color-scheme: dark) {
@@ -826,26 +836,20 @@ def main() -> None:
 
         with summary_cols[0]:
             st.markdown('<div class="summary-section-title">Total / Totale</div>', unsafe_allow_html=True)
-            st.markdown(
-                f"""
-                <div class="summary-box">
-                    <div class="summary-label">Total</div>
-                    <div class="summary-value">€ {st.session_state.total_price:.2f}</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
+            total_value = f"€ {st.session_state.total_price:.2f}"
+            st.metric(
+                label="Total Amount",
+                value=total_value,
+                label_visibility="collapsed"
             )
 
         with summary_cols[1]:
             st.markdown('<div class="summary-section-title">Deposit / Cauzione</div>', unsafe_allow_html=True)
-            st.markdown(
-                f"""
-                <div class="summary-box">
-                    <div class="summary-label">Deposit</div>
-                    <div class="summary-value">€ {st.session_state.deposit_total:.2f}</div>
-                </div>
-                """,
-                unsafe_allow_html=True,
+            deposit_value = f"€ {st.session_state.deposit_total:.2f}"
+            st.metric(
+                label="Deposit Amount",
+                value=deposit_value,
+                label_visibility="collapsed"
             )
 
         st.markdown(
