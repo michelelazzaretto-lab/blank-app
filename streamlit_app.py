@@ -632,9 +632,9 @@ def main() -> None:
             st.markdown("<div style='height: 100%;'>", unsafe_allow_html=True)
             num_giorni = st.number_input(
                 "Number of days _Numero di giorni_",
-                min_value=min_days,
-                max_value=max_days,
-                value=default_days,
+                min_value=5,
+                max_value=14,
+                value=6,
             )
             st.markdown("</div>", unsafe_allow_html=True)
 
