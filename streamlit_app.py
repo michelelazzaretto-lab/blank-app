@@ -118,6 +118,10 @@ def get_period_info_for_date(current_date):
     return None
 
 
+def should_show_days_warning(num_days, max_days):
+    return max_days < 14 and num_days > max_days
+
+
 def get_num_giorni_bounds(start_date):
     contiguous_end = get_contiguous_end_date(start_date)
     if contiguous_end is None:
@@ -669,7 +673,7 @@ def main() -> None:
             st.session_state.daily_details = daily_details
             st.session_state.segment_summary = segment_summary
 
-            if max_days < 14:
+            if should_show_days_warning(num_giorni, max_days):
                 st.warning(
                     f"The maximum number of valid days for this date is {max_days}, "
                     "to avoid exceeding the ski area opening period. "
