@@ -10,6 +10,7 @@ import streamlit as st
 LOGO_URL = "https://myholiday.krossbooking.com/images/21/logo-sidebar-desktop.png?cdn=0"
 
 PREDEFINED_RECIPIENT = "michele.lazzaretto@gmail.com"
+INFO_RECIPIENT = "info@myholidaylivigno.com"
 
 PERIOD_PRIORITY = {
     "promozionale": 0,
@@ -342,7 +343,7 @@ def send_reservation_email(reservation: dict, total_price: int, customer_email: 
             "SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD e SMTP_FROM_EMAIL."
         )
 
-    recipients = [PREDEFINED_RECIPIENT, customer_email]
+    recipients = [PREDEFINED_RECIPIENT, INFO_RECIPIENT, customer_email]
     subject = "Nuova prenotazione skipass"
     
     tariff_sconto_carta = tariff_total * 0.95
