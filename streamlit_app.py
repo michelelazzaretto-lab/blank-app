@@ -724,7 +724,7 @@ def main() -> None:
     st.columns(3)[1].image(LOGO_URL, width=340)
     st.title("Reserve your skipass")
     st.write(
-        "Complete the form below and the total will be displayed after calculation. "
+        "Complete the form below and the total will be displayed after calculation. ||"
         "_Compila il modulo qui sotto e il totale verrà mostrato dopo il calcolo_."
     )
 
@@ -741,21 +741,21 @@ def main() -> None:
     with st.form("reservation_form"):
         col_input_1, col_input_2 = st.columns([1.3, 1])
         with col_input_1:
-            reservation_reference = st.text_input("Full name / reservation number _Nome e cognome / numero di prenotazione_")
+            reservation_reference = st.text_input("Full name / reservation number ||_Nome e cognome / numero di prenotazione_")
         with col_input_2:
-            email = st.text_input("Email address _Indirizzo email_")
+            email = st.text_input("Email address ||_Indirizzo email_")
 
         col_date_1, col_date_2 = st.columns([1.1, 1.1])
         with col_date_1:
             st.markdown("<div style='height: 100%;'>", unsafe_allow_html=True)
-            data_inizio = st.date_input("Valid from _Valido dal_")
+            data_inizio = st.date_input("Valid from ||_Valido dal_")
             st.session_state.data_inizio = data_inizio
             st.markdown("</div>", unsafe_allow_html=True)
         with col_date_2:
             min_days, max_days, default_days = get_num_giorni_bounds(data_inizio)
             st.markdown("<div style='height: 100%;'>", unsafe_allow_html=True)
             num_giorni = st.number_input(
-                "Number of days _Numero di giorni_",
+                "Number of days ||_Numero di giorni_",
                 min_value=5,
                 max_value=14,
                 value=6,
