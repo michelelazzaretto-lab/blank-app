@@ -9,7 +9,7 @@ import streamlit as st
 
 LOGO_URL = "https://myholiday.krossbooking.com/images/21/logo-sidebar-desktop.png?cdn=0"
 
-PREDEFINED_RECIPIENT = "michele.lazzaretto@gmail.com"
+PREDEFINED_RECIPIENT = ""
 INFO_RECIPIENT = "info@myholidaylivigno.com"
 
 PERIOD_PRIORITY = {
