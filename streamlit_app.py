@@ -725,7 +725,7 @@ def main() -> None:
     st.title("Reserve your skipass")
     st.write(
         "Complete the form below and the total will be displayed after calculation. ||"
-        "_Compila il modulo qui sotto e il totale verrà mostrato dopo il calcolo_."
+        " _Compila il modulo qui sotto e il totale verrà mostrato dopo il calcolo_."
     )
 
     if "reservation" not in st.session_state:
