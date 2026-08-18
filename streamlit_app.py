@@ -762,7 +762,7 @@ def main() -> None:
             )
             st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown('<div class="section-label">Guest categories</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-label">Guest categories || Categorie ospiti</div>', unsafe_allow_html=True)
         category_cols = st.columns([1.05, 1.35, 1.35, 1.35, 1.35])
         with category_cols[0]:
             num_adulti = st.number_input("Adults\n_Adulti_", min_value=0, max_value=20, value=1)
